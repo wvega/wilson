@@ -10,5 +10,5 @@ A Fabric recipe to setup a new WordPress project and other common tasks
 
 # Using #
 
-   git clone https://wvega@github.com/wvega/wordpress-skeleton.git
-   fab setup
+    git clone https://wvega@github.com/wvega/wordpress-skeleton.git
+    fab setup
