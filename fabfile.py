@@ -39,8 +39,6 @@ def wordpress(version='3.1.3'):
     local('mkdir -m 0777 wp-content/uploads')
     local('mv htaccess.sample .htaccess')
 
-    local('rm wp-config-sample.php')
-
 
 def git(force=False):
     """Creates a new git repo for this project"""
