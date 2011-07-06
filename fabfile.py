@@ -54,14 +54,14 @@ def git(force=False):
         local('mv gitignore.sample .gitignore')
         local('git add .')
         local('git commit -m "Initial commit."')
-		
+        
         if os.path.exists('/files/Git/projects/'):
-	        repo = '/files/Git/projects/%s.git' % options['name']
-			local('git clone --bare . %s' % repo)
-		    local('git remote add origin %s' % repo )
-		    local('git config branch.master.remote origin')
-		    local('git config branch.master.merge refs/heads/master')
-		else:
+            repo = '/files/Git/projects/%s.git' % options['name']
+            local('git clone --bare . %s' % repo)
+            local('git remote add origin %s' % repo )
+            local('git config branch.master.remote origin')
+            local('git config branch.master.merge refs/heads/master')
+        else:
             print("\nCan't create origin. Skipping")
     else:
         print('Ok. Nothing was touched!');
