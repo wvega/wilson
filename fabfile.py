@@ -4,7 +4,7 @@ import getpass
 import os
 import re
 
-from fabric.api import local
+from fabric.api import local, abort
 from fabric.contrib.console import confirm
 
 from options import options
@@ -13,10 +13,13 @@ from options import options
 def setup():
     """Setup a new WordPress project"""
 
+    if options['name'] == 'example.com':
+        abort('Please update your options.py first!')
+
     wordpress()
     git(force=True)
 
-    print("\nThat's all. Don't forget to update your options.py!")
+    print("\nThat's all. Have fun!")
 
 
 def wordpress(version='3.1.3'):
@@ -42,13 +45,24 @@ def wordpress(version='3.1.3'):
 def git(force=False):
     """Creates a new git repo for this project"""
 
-    if force or confirm('This will removesad the current .git directory, do you want to continue?', default=False):
+    if force or confirm('This will remove the current .git directory, do you want to continue?', default=False):
         # remove wordpress-skeleton.git metadata
         local('rm .git -rf')
 
         # setup a new repository
         local('git init')
         local('mv gitignore.sample .gitignore')
+        local('git add .')
+        local('git commit -m "Initial commit."')
+		
+        if os.path.exists('/files/Git/projects/'):
+	        repo = '/files/Git/projects/%s.git' % options['name']
+			local('git clone --bare . %s' % repo)
+		    local('git remote add origin %s' % repo )
+		    local('git config branch.master.remote origin')
+		    local('git config branch.master.merge refs/heads/master')
+		else:
+            print("\nCan't create origin. Skipping")
     else:
         print('Ok. Nothing was touched!');
 
@@ -68,7 +82,7 @@ def prepare():
         for key in patterns:
             result = patterns[key].search(line)
             if result is not None:
-                settings['local.%s' % key] = result.group(1)
+                options['local.%s' % key] = result.group(1)
 
 
 def replace(pattern, replacement):
@@ -76,10 +90,10 @@ def replace(pattern, replacement):
 
     prepare()
 
-    host = settings['local.host']
-    username = settings['local.user']
-    password = settings['local.password']
-    db = settings['local.db']
+    host = options['local.host']
+    username = options['local.user']
+    password = options['local.password']
+    db = options['local.db']
 
     args = (pattern, replacement, host, username, password, db)
     local('php searchandreplace.php %s %s %s %s %s %s true' % args)
@@ -90,15 +104,15 @@ def backup():
 
     prepare()
 
-    host = settings['local.host']
-    username = settings['local.user']
-    password = settings['local.password']
-    db = settings['local.db']
+    host = options['local.host']
+    username = options['local.user']
+    password = options['local.password']
+    db = options['local.db']
 
     # find an unique name for the backup file
     import datetime
     now = datetime.datetime.now()
-    basename = 'sql/%s-%d-%.2d-%.2d-1.sql' % (settings['name'], now.year, now.month, now.day)
+    basename = 'sql/%s-%d-%.2d-%.2d-1.sql' % (options['name'], now.year, now.month, now.day)
     filename = basename
     i = 2
 
@@ -108,13 +122,13 @@ def backup():
 
     # create db backups for testing and development environments
     for e in ['production', 'testing']:
-        if settings['%s.url' % e] is None:
+        if options['%s.url' % e] is None:
             continue
-        replace(settings['local.url'], settings['%s.url' % e])
+        replace(options['local.url'], options['%s.url' % e])
         local('mysqldump -uroot -ppassword %s > %s' % (db, filename.replace('.sql', '-%s.sql' % e)))
 
     # create a local db backup
-    replace(settings['testing.url'], settings['local.url'])
+    replace(options['testing.url'], options['local.url'])
     local('mysqldump -uroot -ppassword %s > %s' % (db, filename))
 
 
