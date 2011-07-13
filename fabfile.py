@@ -110,8 +110,8 @@ def backup():
     # find an unique name for the backup file
     import datetime
     now = datetime.datetime.now()
-    basename = 'sql/%s-%d-%.2d-%.2d-1.sql' % (options['name'], now.year, now.month, now.day)
-    filename = basename
+    basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['name'], now.year, now.month, now.day)
+    filename = basename.replace('.sql', '-1.sql')
     i = 2
 
     while os.path.exists(filename):
@@ -119,26 +119,28 @@ def backup():
         i = i + 1
 
     # create db backups for testing and development environments
+    last = 'local.url'
     for e in ['production', 'testing']:
         if options['%s.url' % e] is None:
             continue
-        replace(options['local.url'], options['%s.url' % e])
+        replace(options[last], options['%s.url' % e])
         local('mysqldump -uroot -ppassword %s > %s' % (db, filename.replace('.sql', '-%s.sql' % e)))
+        last = '%s.url' % e
 
     # create a local db backup
-    replace(options['testing.url'], options['local.url'])
+    replace(options[last], options['local.url'])
     local('mysqldump -uroot -ppassword %s > %s' % (db, filename))
 
 
 def config(target='local', create=None):
     """Swtich between different wp-config.php files"""
 
+    target = getpass.getuser() if target == 'local' else target
+
     if target in ['p', 'production'] and os.path.exists('wp-config.production.php'):
         local('cp wp-config.production.php wp-config.php')
     elif target in ['t', 'testing'] and os.path.exists('wp-config.testing.php'):
         local('cp wp-config.testing.php wp-config.php')
-    elif target == 'local':
-        local('cp wp-config.%s.php wp-config.php' % getpass.getuser())
     elif not os.path.exists('wp-config.%s.php' % target):
         if create or confirm('Do you want to create the config file wp-config.%s.php' % target):
             local('cp wp-config.php wp-config.%s.php' % target)
