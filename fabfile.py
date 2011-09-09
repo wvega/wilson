@@ -6,6 +6,7 @@ import re
 
 from fabric.api import local, abort
 from fabric.contrib.console import confirm
+from fabric.operations import prompt
 
 from options import options
 
@@ -18,6 +19,8 @@ def setup():
 
     wordpress()
     git(force=True)
+
+    httpdconf('local.%s' % options['name'], os.getcwd())
 
     print("\nThat's all. Have fun!")
 
@@ -55,7 +58,8 @@ def git(force=False):
         
         if os.path.exists('/files/Git/projects/'):
             repo = '/files/Git/projects/%s.git' % options['name']
-            local('git clone --bare . %s' % repo)
+            if not os.path.exists(repo):
+                local('git clone --bare . %s' % repo)
             local('git remote add origin %s' % repo )
             local('git config branch.master.remote origin')
             local('git config branch.master.merge refs/heads/master')
@@ -63,6 +67,40 @@ def git(force=False):
             print("\nCan't create origin. Skipping")
     else:
         print('Ok. Nothing was touched!');
+
+
+def httpdconf(domain, src, *args, **kw):
+    conf = options['httpd.conf.dir']
+    root = os.path.join(options['httpd.document.root'], domain)
+    src = os.path.realpath(src)
+
+    if not os.path.exists(conf):
+        print '\nERROR: Configuration directory doesn\'t exists: %s\n' % conf
+        return
+
+    conf = open(os.path.join(conf, '%s.conf' % domain), 'w+')
+
+    conf.write('<VirtualHost *:80>\n')
+    conf.write('\tServerName %s\n' % domain)
+    conf.write('\tDocumentRoot %s\n' % root)
+    conf.write('\n')
+    conf.write('\t<Directory %s>\n' % root)
+    conf.write('\t\tOptions FollowSymLinks\n')
+    conf.write('\t\tAllowOverride All\n')
+    conf.write('\t</Directory>\n')
+    conf.write('</VirtualHost>\n')
+    conf.close()
+
+    try:
+        os.symlink(src, root)
+    except OSError:
+        os.unlink(root)
+        os.symlink(src, root)
+
+    print('A VirtualHost has been created:')
+    print('\n%s => %s.\n' % (domain, src))
+    print('Add the following to your /etc/hosts and restart Apache:')
+    print('\n::1             %s\n' % domain)
 
 
 def prepare():
