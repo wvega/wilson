@@ -94,8 +94,12 @@ def httpdconf(domain, src, *args, **kw):
     try:
         os.symlink(src, root)
     except OSError:
-        os.unlink(root)
-        os.symlink(src, root)
+        if os.path.exists(root):
+            os.unlink(root)
+            os.symlink(src, root)
+        else:
+            print("Warning: couldn't create symbolic link (%s) to %s. Try:" % (src, root));
+            print('ln -s %s %s\n' % (src, root))
 
     print('A VirtualHost has been created:')
     print('\n%s => %s.\n' % (domain, src))
