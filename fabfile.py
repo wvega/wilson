@@ -6,7 +6,6 @@ import re
 
 from fabric.api import local, abort
 from fabric.contrib.console import confirm
-from fabric.operations import prompt
 
 from options import options
 
@@ -55,18 +54,18 @@ def git(force=False):
         local('mv gitignore.sample .gitignore')
         local('git add .')
         local('git commit -m "Initial commit."')
-        
+
         if os.path.exists('/files/Git/projects/'):
             repo = '/files/Git/projects/%s.git' % options['name']
             if not os.path.exists(repo):
                 local('git clone --bare . %s' % repo)
-            local('git remote add origin %s' % repo )
+            local('git remote add origin %s' % repo)
             local('git config branch.master.remote origin')
             local('git config branch.master.merge refs/heads/master')
         else:
             print("\nCan't create origin. Skipping")
     else:
-        print('Ok. Nothing was touched!');
+        print('Ok. Nothing was touched!')
 
 
 def httpdconf(domain, src, *args, **kw):
@@ -98,7 +97,7 @@ def httpdconf(domain, src, *args, **kw):
             os.unlink(root)
             os.symlink(src, root)
         else:
-            print("Warning: couldn't create symbolic link (%s) to %s. Try:" % (src, root));
+            print("Warning: couldn't create symbolic link (%s) to %s. Try:" % (src, root))
             print('ln -s %s %s\n' % (src, root))
 
     print('A VirtualHost has been created:')
@@ -160,13 +159,15 @@ def backup():
         filename = basename.replace('.sql', '-%d.sql' % i)
         i = i + 1
 
+    command = 'mysqldump -h%s -u%s -p%s %s > %s'
+
     # create db backups for testing and development environments
     last = 'local.url'
     for e in ['production', 'testing']:
         if options['%s.url' % e] is None:
             continue
         replace(options[last], options['%s.url' % e])
-        local('mysqldump -uroot -ppassword %s > %s' % (db, filename.replace('.sql', '-%s.sql' % e)))
+        local(command % (host, username, password, db, filename.replace('.sql', '-%s.sql' % e)))
         last = '%s.url' % e
 
     # create a local db backup
@@ -186,7 +187,5 @@ def config(target='local', create=None):
     elif not os.path.exists('wp-config.%s.php' % target):
         if create or confirm('Do you want to create the config file wp-config.%s.php' % target):
             local('cp wp-config.php wp-config.%s.php' % target)
-    else:        
+    else:
         local('cp wp-config.%s.php wp-config.php' % target)
-
-
