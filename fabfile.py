@@ -20,7 +20,7 @@ def setup(version='3.1.3'):
     git(force=True)
 
     import urlparse
-    host = urlparse.urlparse(options['local.host']).netloc
+    host = urlparse.urlparse(options['local.url']).netloc
     httpdconf(host, os.getcwd())
 
     print("\nThat's all. Have fun!")
