@@ -10,21 +10,23 @@ from fabric.contrib.console import confirm
 from options import options
 
 
-def setup():
+def setup(version='3.1.3'):
     """Setup a new WordPress project"""
 
     if options['name'] == 'example.com':
         abort('Please update your options.py first!')
 
-    wordpress()
+    wordpress(version)
     git(force=True)
 
-    httpdconf('local.%s' % options['name'], os.getcwd())
+    import urlparse
+    host = urlparse.urlparse(options['local.host']).netloc
+    httpdconf(host, os.getcwd())
 
     print("\nThat's all. Have fun!")
 
 
-def wordpress(version='3.1.3'):
+def wordpress(version):
     """Download latest stable version of WordPress"""
 
     if version is None:
