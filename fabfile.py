@@ -161,7 +161,7 @@ def backup():
         filename = basename.replace('.sql', '-%d.sql' % i)
         i = i + 1
 
-    command = 'mysqldump -h%s -u%s -p%s %s > %s'
+    command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
 
     # create db backups for testing and development environments
     last = 'local.url'
@@ -174,7 +174,7 @@ def backup():
 
     # create a local db backup
     replace(options[last], options['local.url'])
-    local('mysqldump -uroot -ppassword %s > %s' % (db, filename))
+    local(command % (host, username, password, db, filename))
 
 
 def config(target='local', create=None):
