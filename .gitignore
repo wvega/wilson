@@ -1,2 +1,8 @@
 *.pyc
 *~
+
+# all backups
+sql/*.sql
+
+# except the latest
+!sql/*latest*

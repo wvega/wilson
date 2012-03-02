@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import datetime
 import getpass
 import os
 import re
@@ -150,8 +151,10 @@ def backup():
     password = options['local.password']
     db = options['local.db']
 
+    if not os.path.exists('sql'):
+        local('mkdir -p sql')
+
     # find an unique name for the backup file
-    import datetime
     now = datetime.datetime.now()
     basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['name'], now.year, now.month, now.day)
     filename = basename.replace('.sql', '-1.sql')
@@ -163,21 +166,19 @@ def backup():
 
     command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
 
-    if not os.path.exists('sql'):
-        local('mkdir -p sql')
-
     # create db backups for testing and development environments
     last = 'local.url'
-    for e in ['production', 'testing']:
+    for e in ['production', 'testing', 'local']:
         if options['%s.url' % e] is None:
             continue
-        replace(options[last], options['%s.url' % e])
-        local(command % (host, username, password, db, filename.replace('.sql', '-%s.sql' % e)))
-        last = '%s.url' % e
 
-    # create a local db backup
-    replace(options[last], options['local.url'])
-    local(command % (host, username, password, db, filename))
+        last = '%s.url' % e
+        sqlfile = filename.replace('.sql', '-%s.sql' % e)
+
+        replace(options[last], options['%s.url' % e])
+
+        local(command % (host, username, password, db, sqlfile))
+        local('cp %s sql/%s-%s-latest.sql' % (sqlfile, options['name'], e))
 
 
 def config(target='local', create=None):
