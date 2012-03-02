@@ -163,6 +163,9 @@ def backup():
 
     command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
 
+    if not os.path.exists('sql'):
+        local('mkdir -p sql')
+
     # create db backups for testing and development environments
     last = 'local.url'
     for e in ['production', 'testing']:
@@ -173,8 +176,6 @@ def backup():
         last = '%s.url' % e
 
     # create a local db backup
-    if not os.path.exists('sql'):
-        local('mkdir -p sql')
     replace(options[last], options['local.url'])
     local(command % (host, username, password, db, filename))
 
