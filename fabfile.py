@@ -153,8 +153,8 @@ def backup():
     now = datetime.datetime.now()
     basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['name'], now.year, now.month, now.day)
     filename = basename.replace('.sql', '-1.sql')
-    i = 2
 
+    i = 2
     while os.path.exists(filename):
         filename = basename.replace('.sql', '-%d.sql' % i)
         i = i + 1
@@ -171,6 +171,8 @@ def backup():
         last = '%s.url' % e
 
     # create a local db backup
+    if not os.path.exists('sql'):
+        local('mkdir -p sql')
     replace(options[last], options['local.url'])
     local('mysqldump -uroot -ppassword %s > %s' % (db, filename))
 
