@@ -10,21 +10,23 @@ from fabric.contrib.console import confirm
 from options import options
 
 
-def setup():
+def setup(version='3.1.3'):
     """Setup a new WordPress project"""
 
     if options['name'] == 'example.com':
         abort('Please update your options.py first!')
 
-    wordpress()
+    wordpress(version)
     git(force=True)
 
-    httpdconf('local.%s' % options['name'], os.getcwd())
+    import urlparse
+    host = urlparse.urlparse(options['local.url']).netloc
+    httpdconf(host, os.getcwd())
 
     print("\nThat's all. Have fun!")
 
 
-def wordpress(version='3.1.3'):
+def wordpress(version):
     """Download latest stable version of WordPress"""
 
     if version is None:
@@ -159,7 +161,7 @@ def backup():
         filename = basename.replace('.sql', '-%d.sql' % i)
         i = i + 1
 
-    command = 'mysqldump -h%s -u%s -p%s %s > %s'
+    command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
 
     # create db backups for testing and development environments
     last = 'local.url'
@@ -174,7 +176,7 @@ def backup():
     if not os.path.exists('sql'):
         local('mkdir -p sql')
     replace(options[last], options['local.url'])
-    local('mysqldump -uroot -ppassword %s > %s' % (db, filename))
+    local(command % (host, username, password, db, filename))
 
 
 def config(target='local', create=None):
