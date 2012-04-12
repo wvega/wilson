@@ -146,7 +146,7 @@ def backup():
 
     prepare()
 
-    host = options['local.host']
+    host = '127.0.0.1'  # options['local.host']
     username = options['local.user']
     password = options['local.password']
     db = options['local.db']
@@ -158,10 +158,12 @@ def backup():
     now = datetime.datetime.now()
     basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['name'], now.year, now.month, now.day)
     filename = basename.replace('.sql', '-1.sql')
+    sqlfile = filename.replace('.sql', '-local.sql')
 
     i = 2
-    while os.path.exists(filename):
+    while os.path.exists(sqlfile):
         filename = basename.replace('.sql', '-%d.sql' % i)
+        sqlfile = filename.replace('.sql', '-local.sql')
         i = i + 1
 
     command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
@@ -172,13 +174,14 @@ def backup():
         if options['%s.url' % e] is None:
             continue
 
-        last = '%s.url' % e
         sqlfile = filename.replace('.sql', '-%s.sql' % e)
 
         replace(options[last], options['%s.url' % e])
 
         local(command % (host, username, password, db, sqlfile))
         local('cp %s sql/%s-%s-latest.sql' % (sqlfile, options['name'], e))
+
+        last = '%s.url' % e
 
 
 def config(target='local', create=None):
