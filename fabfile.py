@@ -146,7 +146,7 @@ def backup():
 
     prepare()
 
-    host = '127.0.0.1'  # options['local.host']
+    host = options['local.host']
     username = options['local.user']
     password = options['local.password']
     db = options['local.db']
