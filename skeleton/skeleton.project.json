@@ -1,0 +1,6 @@
+{
+    "project.name": "example.com",
+    "project.url.production": "www.example.com",
+    "project.url.testing": "testing.example.com",
+    "project.url.local": "local.example.com",
+}

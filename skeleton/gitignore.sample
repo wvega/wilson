@@ -1,0 +1,15 @@
+*.pyc
+*~
+
+# skeleton files
+.skeleton.json
+fabfile.py
+
+# eclipse files
+.project
+.settings
+
+# all backups
+sql/*.sql
+# except the latest
+!sql/*latest*

@@ -1,0 +1,4 @@
+{
+    "global.httpd.conf": "/var/www/conf.d",
+    "global.httpd.htdocs": "/var/www/html"
+}
