@@ -1,8 +1,8 @@
 *.pyc
 *~
+*.egg-info
+build/
+dist/
 
-# all backups
-sql/*.sql
-
-# except the latest
-!sql/*latest*
+# others
+theme/

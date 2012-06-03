@@ -1,9 +1,0 @@
-*.pyc
-*~
-# skeleton files 
-options.py
-fabfile.py
-searchandreplace.php
-# eclipse files
-.project
-.settings

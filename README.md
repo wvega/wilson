@@ -7,8 +7,3 @@ A Fabric recipe to setup a new WordPress project and other common tasks
 + Add .htaccess file and remove wp-config-sample.php
 + Allows to create multiple wp-config.php files and switch between them.
 + Create DB backups using different blog URLs for each environment (local, testing and production)
-
-# Using #
-
-    git clone https://github.com/wvega/wordpress-skeleton.git .
-    fab setup
