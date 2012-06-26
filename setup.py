@@ -20,6 +20,6 @@ setup(
     keywords='fabric wordpress',
     url='http://packages.python.org/wilson',
     packages=['skeleton', 'skeleton.wordpress'],
-    package_data={'skeleton': ['*.json', '*.sample']},
+    package_data={'skeleton': ['*.json', '*.php', '*.sample']},
     classifiers=["Development Status :: 3 - Alpha"]
 )

@@ -14,10 +14,13 @@ from skeleton import Skeleton, options
 SKELETON = os.path.join(os.getcwd(), '.skeleton.json')
 
 
-def httpdconf(domain, src, *args, **kw):
+def httpdconf(domain=None, directory=None, *args, **kw):
+    domain = 'local.%s' % options['project.name'] if domain is None else domain
+    directory = os.getcwd() if directory is None else directory
+    directory = os.path.realpath(directory)
+
     conf = os.path.expanduser(options['global.httpd.conf'])
     root = os.path.expanduser(os.path.join(options['global.httpd.htdocs'], domain))
-    src = os.path.realpath(src)
 
     if not os.path.exists(conf):
         abort('Configuration directory doesn\'t exists: %s\n' % conf)
@@ -39,20 +42,19 @@ def httpdconf(domain, src, *args, **kw):
         abort('Couldn\'t write the configuration file.')
 
     try:
-        os.symlink(src, root)
-    except OSError:
         if os.path.exists(root):
+            print root, os.path.realpath(root), directory
             os.unlink(root)
-            os.symlink(src, root)
-        else:
-            message = "Warning: couldn't create symbolic link (%s) to %s. Try:" % (src, root)
-            message = '%s\nln -s %s %s\n' % (message, src, root)
+        os.symlink(directory, root)
+    except OSError:
+            message = "Warning: couldn't create symbolic link %s to %s. Try:" % (directory, root)
+            message = '%s\nln -s %s %s\n' % (message, directory, root)
             abort(message)
 
     print('A VirtualHost has been created:')
-    print('\n%s => %s.\n' % (domain, src))
+    print('\n\t%s => %s.\n' % (domain, directory))
     print('Add the following to your /etc/hosts and restart Apache:')
-    print('\n127.0.0.1\t\t%s\n' % domain)
+    print('\n\t127.0.0.1\t\t%s\n' % domain)
 
 
 def git(force=False):
@@ -127,9 +129,7 @@ def setup(version='latest'):
     wordpress(version)
     git(force=True)
 
-    import urlparse
-    host = urlparse.urlparse(options['project.url.local']).netloc
-    httpdconf(host, os.getcwd())
+    httpdconf(options['project.name'], os.getcwd())
 
     print("\nThat's all. Have fun!")
 
@@ -162,26 +162,26 @@ def replace(pattern, replacement):
     username = options['project.mysql.user']
     password = options['project.mysql.password']
 
-    args = (pattern, replacement, host, username, password, db)
-    local('php searchandreplace.php %s %s %s %s %s %s true' % args)
+    args = (Skeleton.asset('searchandreplace.php'), pattern, replacement, host, username, password, db)
+    local('php %s %s %s %s %s %s %s true' % args)
 
 
-def backup():
+def backup(databases=False):
     """Creates database backups using different website URLs for testing, production and local environment"""
 
     prepare()
 
-    host = options['local.host']
-    username = options['local.user']
-    password = options['local.password']
-    db = options['local.db']
+    host = options['project.mysql.host']
+    username = options['project.mysql.user']
+    password = options['project.mysql.password']
+    db = options['project.mysql.db']
 
     if not os.path.exists('sql'):
         local('mkdir -p sql')
 
     # find an unique name for the backup file
     now = datetime.datetime.now()
-    basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['name'], now.year, now.month, now.day)
+    basename = 'sql/%s-%d-%.2d-%.2d.sql' % (options['project.name'], now.year, now.month, now.day)
     filename = basename.replace('.sql', '-1.sql')
     sqlfile = filename.replace('.sql', '-local.sql')
 
@@ -191,22 +191,24 @@ def backup():
         sqlfile = filename.replace('.sql', '-local.sql')
         i = i + 1
 
-    command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s --databases %s > %s'
+    command = 'mysqldump --add-drop-table --add-drop-database -h%s -u%s -p%s'
+    command = '%s --databases' % command if databases else command
+    command = command + ' %s > %s'
 
     # create db backups for testing and development environments
-    last = 'local.url'
+    last = 'project.url.local'
     for e in ['production', 'testing', 'local']:
-        if options['%s.url' % e] is None:
+        if options['project.url.%s' % e] is None:
             continue
 
         sqlfile = filename.replace('.sql', '-%s.sql' % e)
 
-        replace(options[last], options['%s.url' % e])
+        replace(options[last], options['project.url.%s' % e])
 
         local(command % (host, username, password, db, sqlfile))
-        local('cp %s sql/%s-%s-latest.sql' % (sqlfile, options['name'], e))
+        local('cp %s sql/%s-%s-latest.sql' % (sqlfile, options['project.name'], e))
 
-        last = '%s.url' % e
+        last = 'project.url.%s' % e
 
 
 def config(target='local', create=None):
