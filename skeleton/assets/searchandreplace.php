@@ -97,10 +97,12 @@ if (!$cid) {
     die("Connecting to DB Error: " . mysql_error() . "\n");
 }
 
+mysql_select_db($db);
+
 // First, get a list of tables
 
 $SQL = "SHOW TABLES";
-$tables_list = mysql_db_query($db, $SQL, $cid);
+$tables_list = mysql_query($SQL, $cid);
 
 if (!$tables_list) {
     die("ERROR: " . mysql_error() . "\n$SQL\n");
@@ -125,7 +127,7 @@ while ($table_rows = mysql_fetch_array($tables_list)) {
     report("Checking table: ".$table."\n");  // we have tables!
     
     $SQL = "DESCRIBE ".$table ;    // fetch the table description so we know what to do with it
-    $fields_list = mysql_db_query($db, $SQL, $cid);
+    $fields_list = mysql_query($SQL, $cid);
 
     // Make a simple array of field column names
 
@@ -145,7 +147,7 @@ while ($table_rows = mysql_fetch_array($tables_list)) {
     // Now let's get the data and do search and replaces on it...
 
     $SQL = "SELECT * FROM ".$table;     // fetch the table contents
-    $data = mysql_db_query($db, $SQL, $cid);
+    $data = mysql_query($SQL, $cid);
 
     if (!$data) {
         report("\tERROR: " . mysql_error() . "\n$SQL\n");
@@ -194,7 +196,7 @@ while ($table_rows = mysql_fetch_array($tables_list)) {
             $count_updates_run++;
             // strip off the excess AND - the easiest way to code this without extra flags, etc.
             $UPDATE_SQL = $UPDATE_SQL.substr($WHERE_SQL,0,-4);
-            $result = mysql_db_query($db,$UPDATE_SQL,$cid);
+            $result = mysql_query($UPDATE_SQL,$cid);
 
             if (!$result) {
                 report("\tERROR: " . mysql_error() . "\n$UPDATE_SQL\n");

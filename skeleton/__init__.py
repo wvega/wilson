@@ -3,7 +3,23 @@
 import os
 import json
 
-from fabric.api import warn, abort
+from fabric.api import abort, local, warn
+from fabric.contrib.console import confirm
+from fabric.utils import puts
+
+
+SKELETON = os.path.join(os.getcwd(), '.skeleton.json')
+
+
+def init():
+    """Creates a sample skeleton.json file"""
+
+    message = 'A skeleton.json file already exists. Do you want to overwrite it?'
+    if os.path.exists(SKELETON) and not confirm(message):
+        puts('Ok. Nothing was touched.')
+        return
+
+    local('cp -f %s .skeleton.json' % Skeleton.asset('skeleton.project.json'))
 
 
 class Skeleton(object):
@@ -26,14 +42,14 @@ class Skeleton(object):
             except IOError:
                 warn('No skeleton.json was found for this project.')
                 project = {}
-        except ValueError:
-            abort('One of your skeleton.json files contains an error.')
+        except ValueError, e:
+            abort('One of your skeleton.json files contains an error:\n\n%s' % e)
 
         return dict(system.items() + project.items())
 
     @classmethod
     def asset(cls, filename):
-        return os.path.join(os.path.dirname(__file__), filename)
+        return os.path.join(os.path.dirname(__file__), 'assets', filename)
 
 
 options = Skeleton.options()

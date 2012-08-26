@@ -11,7 +11,7 @@ def read(filename):
 
 setup(
     name='Wordpress Skeleton',
-    version='0.0.1',
+    version='0.0.3',
     author='Willington Vega',
     author_email='wvega@wvega.com',
     description=('Fabric recipes to work with WordPress projects'),
@@ -19,7 +19,9 @@ setup(
     license='GPL',
     keywords='fabric wordpress',
     url='http://packages.python.org/wilson',
-    packages=['skeleton', 'skeleton.wordpress'],
-    package_data={'skeleton': ['*.json', '*.php', '*.sample']},
-    classifiers=["Development Status :: 3 - Alpha"]
+    packages=['skeleton'],
+    package_data={'skeleton': ['assets/*']},
+    install_requires=['Fabric'],
+    classifiers=["Development Status :: 3 - Alpha"],
+    test_suite='tests.suite'
 )
